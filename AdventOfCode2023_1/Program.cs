@@ -6,8 +6,8 @@ long total = 0;
 foreach (var line in lines)
 {
     const string pattern = "one|two|three|four|five|six|seven|eight|nine|zero|\\d";
-    var firstMatch = Regex.Matches(line, pattern).First();
-    var lastMatch = Regex.Matches(line, pattern, RegexOptions.RightToLeft).First();
+    var firstMatch = Regex.Match(line, pattern);
+    var lastMatch = Regex.Match(line, pattern, RegexOptions.RightToLeft);
     var first = ParseValue(firstMatch.Value);
     var last = ParseValue(lastMatch.Value);
 
