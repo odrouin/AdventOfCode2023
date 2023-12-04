@@ -1,39 +1,97 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Diagnostics;
+using System.Text.RegularExpressions;
 
 var lines = File.ReadAllLines("input.txt");
 
-var points = 0;
-foreach (var line in lines)
-{
-    var pattern = @"^Card(.*)(\d+): (.*)";
-    var cardMatches = Regex.Match(line, pattern);
-    var cardNumber = cardMatches.Groups[2].Value;
-    var cardLine = cardMatches.Groups[3].Value;
-    
-    var splittedCardLine = cardLine.Split("|");
-    var winningNumbersLine = splittedCardLine[0];
-    var pickedNumbersLine = splittedCardLine[1];
-    
-    var winningNumbers = Regex.Matches(winningNumbersLine, "[0-9]+").Select(x => int.Parse(x.Value)).ToList();
-    var pickedNumbers = Regex.Matches(pickedNumbersLine, "[0-9]+").Select(x => int.Parse(x.Value)).ToList();
+var stopWatch = new Stopwatch();
+stopWatch.Start();
 
-    var cardPoints = 0;
-    foreach(var pickedNumber in pickedNumbers)
+Console.WriteLine("Part 1");
+Console.WriteLine("================================");
+Console.WriteLine($"Total: {Part1()}");
+Console.WriteLine("\nPart 2");
+Console.WriteLine("================================");
+Console.WriteLine($"Total: {Part2()}");
+
+Console.WriteLine($"Total time: {stopWatch.ElapsedMilliseconds} ms");
+
+int Part1()
+{
+    var points = 0;
+    foreach (var line in lines)
     {
-        if (winningNumbers.Contains(pickedNumber))
+        var cardMatches = LineRegex().Match(line);
+        var cardLine = cardMatches.Groups[3].Value;
+    
+        var splittedCardLine = cardLine.Split("|");
+        var winningNumbersLine = splittedCardLine[0];
+        var pickedNumbersLine = splittedCardLine[1];
+    
+        var winningNumbers = NumberRegex().Matches(winningNumbersLine).Select(x => int.Parse(x.Value)).ToList();
+        var pickedNumbers = NumberRegex().Matches(pickedNumbersLine).Select(x => int.Parse(x.Value)).ToList();
+
+        var cardPoints = 0;
+        foreach(var pickedNumber in pickedNumbers)
         {
-            if (cardPoints == 0)
+            if (winningNumbers.Contains(pickedNumber))
             {
-                cardPoints = 1;
+                if (cardPoints == 0)
+                {
+                    cardPoints = 1;
+                }
+                else
+                {
+                    cardPoints *= 2;
+                }
             }
-            else
+        }
+    
+        points += cardPoints;
+    }
+
+    return points;
+}
+
+int Part2()
+{
+    var cardLines = lines.Select(x => new CardLine { Line = x, Count = 1 }).ToArray();
+    for(var cardIndex = 0 ; cardIndex < cardLines.Length ; ++cardIndex)
+    {
+        var cardLine = cardLines[cardIndex];
+        for (var i = 0; i < cardLine.Count; ++i)
+        {
+            var cardMatches = LineRegex().Match(cardLine.Line);
+            var lineString = cardMatches.Groups[3].Value;
+    
+            var splittedLineString = lineString.Split("|");
+            var winningNumbersLine = splittedLineString[0];
+            var pickedNumbersLine = splittedLineString[1];
+    
+            var winningNumbers = NumberRegex().Matches(winningNumbersLine).Select(x => int.Parse(x.Value)).ToList();
+            var pickedNumbers = NumberRegex().Matches(pickedNumbersLine).Select(x => int.Parse(x.Value)).ToList();
+
+            var matchingNumbers = pickedNumbers.Count(x => winningNumbers.Contains(x));
+            for(var y = 1 ; y <= matchingNumbers ; ++y)
             {
-                cardPoints *= 2;
+                cardLines[cardIndex + y].Count++;
             }
         }
     }
     
-    points += cardPoints;
+    return cardLines.Sum(x => x.Count);
 }
 
-Console.WriteLine($"Points: {points}");
+class CardLine
+{
+    public int Count { get; set; }
+    public string Line { get; set; }
+}
+
+partial class Program
+{
+    [GeneratedRegex("^Card(.*)(\\d+): (.*)")]
+    private static partial Regex LineRegex();
+    
+    [GeneratedRegex("[0-9]+")]
+    private static partial Regex NumberRegex();
+}
