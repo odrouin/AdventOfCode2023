@@ -13,7 +13,7 @@ Console.WriteLine("\nPart 2");
 Console.WriteLine("================================");
 Console.WriteLine($"Total: {Part2()}");
 
-Console.WriteLine($"Total time: {stopWatch.ElapsedMilliseconds} ms");
+Console.WriteLine($"Total time: {stopWatch.Elapsed:g} ms");
 
 int Part1()
 {
@@ -58,23 +58,21 @@ int Part2()
     for(var cardIndex = 0 ; cardIndex < cardLines.Length ; ++cardIndex)
     {
         var cardLine = cardLines[cardIndex];
-        for (var i = 0; i < cardLine.Count; ++i)
-        {
-            var cardMatches = LineRegex().Match(cardLine.Line);
-            var lineString = cardMatches.Groups[3].Value;
+        
+        var cardMatches = LineRegex().Match(cardLine.Line);
+        var lineString = cardMatches.Groups[3].Value;
     
-            var splittedLineString = lineString.Split("|");
-            var winningNumbersLine = splittedLineString[0];
-            var pickedNumbersLine = splittedLineString[1];
+        var splittedLineString = lineString.Split("|");
+        var winningNumbersLine = splittedLineString[0];
+        var pickedNumbersLine = splittedLineString[1];
     
-            var winningNumbers = NumberRegex().Matches(winningNumbersLine).Select(x => int.Parse(x.Value)).ToList();
-            var pickedNumbers = NumberRegex().Matches(pickedNumbersLine).Select(x => int.Parse(x.Value)).ToList();
+        var winningNumbers = NumberRegex().Matches(winningNumbersLine).Select(x => int.Parse(x.Value)).ToList();
+        var pickedNumbers = NumberRegex().Matches(pickedNumbersLine).Select(x => int.Parse(x.Value)).ToList();
 
-            var matchingNumbers = pickedNumbers.Count(x => winningNumbers.Contains(x));
-            for(var y = 1 ; y <= matchingNumbers ; ++y)
-            {
-                cardLines[cardIndex + y].Count++;
-            }
+        var matchingNumbers = pickedNumbers.Count(x => winningNumbers.Contains(x));
+        for (var y = 1 ; y <= matchingNumbers ; ++y)
+        {
+            cardLines[cardIndex + y].Count += cardLine.Count;
         }
     }
     
