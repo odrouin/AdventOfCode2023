@@ -1,6 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 
-var lines = File.ReadAllLines("input.txt").ToDictionary(x => x);
+var lines = File.ReadAllLines("input.txt");
 
 var points = 0;
 foreach (var line in lines)
