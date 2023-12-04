@@ -1,10 +1,6 @@
-﻿using System.Diagnostics;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
 var lines = File.ReadAllLines("input.txt");
-
-var stopWatch = new Stopwatch();
-stopWatch.Start();
 
 Console.WriteLine("Part 1");
 Console.WriteLine("================================");
@@ -12,8 +8,6 @@ Console.WriteLine($"Total: {Part1()}");
 Console.WriteLine("\nPart 2");
 Console.WriteLine("================================");
 Console.WriteLine($"Total: {Part2()}");
-
-Console.WriteLine($"Total time: {stopWatch.Elapsed:g} ms");
 
 int Part1()
 {
@@ -31,18 +25,15 @@ int Part1()
         var pickedNumbers = NumberRegex().Matches(pickedNumbersLine).Select(x => int.Parse(x.Value)).ToList();
 
         var cardPoints = 0;
-        foreach(var pickedNumber in pickedNumbers)
+        foreach (var pickedNumber in pickedNumbers.Where(pickedNumber => winningNumbers.Contains(pickedNumber)))
         {
-            if (winningNumbers.Contains(pickedNumber))
+            if (cardPoints == 0)
             {
-                if (cardPoints == 0)
-                {
-                    cardPoints = 1;
-                }
-                else
-                {
-                    cardPoints *= 2;
-                }
+                cardPoints = 1;
+            }
+            else
+            {
+                cardPoints *= 2;
             }
         }
     
@@ -55,7 +46,7 @@ int Part1()
 int Part2()
 {
     var cardLines = lines.Select(x => new CardLine { Line = x, Count = 1 }).ToArray();
-    for(var cardIndex = 0 ; cardIndex < cardLines.Length ; ++cardIndex)
+    for (var cardIndex = 0 ; cardIndex < cardLines.Length ; ++cardIndex)
     {
         var cardLine = cardLines[cardIndex];
         
