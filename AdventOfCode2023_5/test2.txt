@@ -1,0 +1,4 @@
+seeds: 40 71
+
+seed-to-soil map:
+51 50 51
