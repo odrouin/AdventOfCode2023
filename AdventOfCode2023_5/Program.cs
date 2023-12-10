@@ -42,22 +42,46 @@ foreach(var line in lines.Skip(2))
         // 1. Définir les nouveaux ranges 
         var rangeEdges = 
             nextSeeds.Concat(seeds)
-            .SelectMany(x => new[] { x.Min, x.Max, x.Min - 1, x.Max - 1 })
+            .SelectMany(x => new[] { x.Min, x.Max, x.Min - 1, x.Max - 1, x.Min + 1, x.Max + 1 })
             .Distinct()
-            .OrderBy(x => x).ToList();
+            .OrderBy(x => x)
+            .ToList();
         
-        var newSeeds = new List<SeedRange>();
-        for (var i = 2; i < rangeEdges.Count; i+=2)
+        var filteredEdges = new List<RangeEdge>();
+        for (var i = 0; i < rangeEdges.Count; i++)
         {
-            // ici ya de quoi de wrong
             if (nextSeeds.FirstOrDefault(x => rangeEdges[i] >= x.Min && rangeEdges[i] <= x.Max) is { } nextSeed)
             {
-                newSeeds.Add(new SeedRange(rangeEdges[i-1], rangeEdges[i], nextSeed.Difference));
+                filteredEdges.Add(new RangeEdge(rangeEdges[i], nextSeed.Difference));
             }
             else if(seeds.FirstOrDefault(x => rangeEdges[i] >= x.Min && rangeEdges[i] <= x.Max) is { })
             {
-                newSeeds.Add(new SeedRange(rangeEdges[i-1], rangeEdges[i], 0));
+                filteredEdges.Add(new RangeEdge(rangeEdges[i], 0));
             }
+            else
+            {
+                filteredEdges.Add(new RangeEdge(rangeEdges[i], null));
+            }
+        }
+
+        var newSeeds = new List<SeedRange>();
+        long? lastDifference = null;
+        long? lastValue = null;
+        long? begin = null;
+        foreach (var filteredEdge in filteredEdges)
+        {
+            if (lastDifference != filteredEdge.Difference)
+            {
+                if(begin != null && lastDifference != null)
+                {
+                    newSeeds.Add(new SeedRange(begin.Value, lastValue!.Value, lastDifference.Value));
+                }
+                
+                begin = filteredEdge.Value;
+            }
+            
+            lastValue = filteredEdge.Value;
+            lastDifference = filteredEdge.Difference;
         }
         
         // 2. Apply the differences
@@ -98,6 +122,19 @@ class SeedRange
     public long Max { get; set; }
 
     public long Difference { get; set; }
+}
+
+class RangeEdge
+{
+    public RangeEdge(long value, long? difference)
+    {
+        this.Value = value;
+        this.Difference = difference;
+    }
+
+    public long Value { get; set; }
+
+    public long? Difference { get; set; }
 }
 
 partial class Program
