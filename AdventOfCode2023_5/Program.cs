@@ -2,100 +2,149 @@
 
 var lines = File.ReadAllLines("input.txt");
 
-var seeds = GetSeeds(lines[0]).ToList();
-var seedsToTransform = new List<SeedRange>();
+Console.WriteLine("Part 1");
+Console.WriteLine("================================");
+Console.WriteLine($"Total: {Part1()}");
+Console.WriteLine("\nPart 2");
+Console.WriteLine("================================");
+Console.WriteLine($"Total: {Part2()}");
 
-for (var lineNumber = 2 ; lineNumber < lines.Length; ++lineNumber)
+long Part1()
 {
-    if (GetNumbers(lines[lineNumber]) is { Count: > 0 } numbers)
-    {
-        var destinationRangeStart = numbers[0];
-        var sourceRangeStart = numbers[1];
-        var rangeLength = numbers[2];
+    var seeds = GetNumbers(lines[0]);
+    var seedTransformations = seeds.ToDictionary(x => x, x => x);
+    var wasSeedTransformed = seeds.ToDictionary(x => x, x => false);
 
-        var seedTransformationMin = sourceRangeStart;
-        var seedTransformationMax = seedTransformationMin + rangeLength - 1;
-        var seedTransformationDifference = destinationRangeStart - sourceRangeStart;
-        
-        foreach (var seed in seeds)
-        {
-            if(seed.Min >= seedTransformationMin && seed.Max <= seedTransformationMax)
-            {
-                seedsToTransform.Add(new SeedRange(seed.Min, seed.Max, seedTransformationDifference));
-            }
-            else if (seed.Min <= seedTransformationMin && seed.Max >= seedTransformationMax)
-            {
-                seedsToTransform.Add(new SeedRange(seedTransformationMin, seedTransformationMax, seedTransformationDifference));
-            }
-            else if (seed.Min >= seedTransformationMin && seed.Min <= seedTransformationMax)
-            {
-                seedsToTransform.Add(new SeedRange(seed.Min, seedTransformationMax, seedTransformationDifference));
-            }
-            else if (seed.Max >= seedTransformationMin && seed.Max <= seedTransformationMax)
-            {
-                seedsToTransform.Add(new SeedRange(seedTransformationMin, seed.Max, seedTransformationDifference));
-            }
-        }
-    }
-    
-    if (lines[lineNumber].Length == 0 || lineNumber == lines.Length - 1)
+    foreach(var line in lines.Skip(1))
     {
-        // define all possible new seed range edges
-        var possibleRangeEdgesValues = 
-            seedsToTransform.Concat(seeds)
-            .SelectMany(x => new[] { x.Min, x.Max, x.Min - 1, x.Max - 1, x.Min + 1, x.Max + 1 })
-            .Distinct()
-            .OrderBy(x => x)
-            .ToList();
-        
-        // define the transformation to apply for all possible edges
-        var possibleRangeEdges = new List<RangeEdge>();
-        for (var i = 0; i < possibleRangeEdgesValues.Count; i++)
+        if (GetNumbers(line) is { Count: > 0 } numbers)
         {
-            if (seedsToTransform.FirstOrDefault(x => possibleRangeEdgesValues[i] >= x.Min && possibleRangeEdgesValues[i] <= x.Max) is { } nextSeed)
-            {
-                possibleRangeEdges.Add(new RangeEdge(possibleRangeEdgesValues[i], nextSeed.Difference));
-            }
-            else if(seeds.FirstOrDefault(x => possibleRangeEdgesValues[i] >= x.Min && possibleRangeEdgesValues[i] <= x.Max) is { })
-            {
-                possibleRangeEdges.Add(new RangeEdge(possibleRangeEdgesValues[i], 0));
-            }
-            else
-            {
-                possibleRangeEdges.Add(new RangeEdge(possibleRangeEdgesValues[i], null));
-            }
-        }
+            var destinationRangeStart = numbers[0];
+            var sourceRangeStart = numbers[1];
+            var rangeLength = numbers[2];
 
-        // define the new seeds ranges
-        var newSeeds = new List<SeedRange>();
-        long? lastDifference = null;
-        long? lastValue = null;
-        long? begin = null;
-        foreach (var filteredEdge in possibleRangeEdges)
-        {
-            if (lastDifference != filteredEdge.Difference)
+            foreach (var seed in seeds.Where(x => !wasSeedTransformed[x]))
             {
-                if(begin != null && lastDifference != null)
+                var seedTransformation = seedTransformations[seed];
+                if (seedTransformation >= sourceRangeStart && seedTransformation < sourceRangeStart + rangeLength)
                 {
-                    newSeeds.Add(new SeedRange(begin.Value, lastValue!.Value, lastDifference.Value));
+                    var destination = destinationRangeStart + (seedTransformation - sourceRangeStart);
+                    seedTransformations[seed] = destination;
+                    wasSeedTransformed[seed] = true;
                 }
-                
-                begin = filteredEdge.Value;
             }
-            
-            lastValue = filteredEdge.Value;
-            lastDifference = filteredEdge.Difference;
         }
-        
-        // 2. Apply the transformation to all seeds
-        newSeeds = newSeeds.Select(x => new SeedRange(x.Min + x.Difference, x.Max + x.Difference, 0)).ToList();
-        
-        seeds = newSeeds;
-        seedsToTransform = new List<SeedRange>();
+        else if (line.Length == 0)
+        {
+            foreach (var seed in seeds)
+            {
+                wasSeedTransformed[seed] = false;
+            }
+        }
     }
+
+    var seedLocations = seeds.Select(x => seedTransformations[x]).ToList();
+
+    return seedLocations.Min();
 }
 
-Console.WriteLine(seeds.Min(x => x.Min));
+long Part2()
+{
+    var seeds = GetSeeds(lines[0]).ToList();
+    var seedsToTransform = new List<SeedRange>();
+
+    for (var lineNumber = 2 ; lineNumber < lines.Length; ++lineNumber)
+    {
+        if (GetNumbers(lines[lineNumber]) is { Count: > 0 } numbers)
+        {
+            var destinationRangeStart = numbers[0];
+            var sourceRangeStart = numbers[1];
+            var rangeLength = numbers[2];
+
+            var seedTransformationMin = sourceRangeStart;
+            var seedTransformationMax = seedTransformationMin + rangeLength - 1;
+            var seedTransformationDifference = destinationRangeStart - sourceRangeStart;
+            
+            foreach (var seed in seeds)
+            {
+                if(seed.Min >= seedTransformationMin && seed.Max <= seedTransformationMax)
+                {
+                    seedsToTransform.Add(new SeedRange(seed.Min, seed.Max, seedTransformationDifference));
+                }
+                else if (seed.Min <= seedTransformationMin && seed.Max >= seedTransformationMax)
+                {
+                    seedsToTransform.Add(new SeedRange(seedTransformationMin, seedTransformationMax, seedTransformationDifference));
+                }
+                else if (seed.Min >= seedTransformationMin && seed.Min <= seedTransformationMax)
+                {
+                    seedsToTransform.Add(new SeedRange(seed.Min, seedTransformationMax, seedTransformationDifference));
+                }
+                else if (seed.Max >= seedTransformationMin && seed.Max <= seedTransformationMax)
+                {
+                    seedsToTransform.Add(new SeedRange(seedTransformationMin, seed.Max, seedTransformationDifference));
+                }
+            }
+        }
+        
+        if (lines[lineNumber].Length == 0 || lineNumber == lines.Length - 1)
+        {
+            // define all possible new seed range edges
+            var possibleRangeEdgesValues = 
+                seedsToTransform.Concat(seeds)
+                .SelectMany(x => new[] { x.Min, x.Max, x.Min - 1, x.Max - 1, x.Min + 1, x.Max + 1 })
+                .Distinct()
+                .OrderBy(x => x)
+                .ToList();
+            
+            // define the transformation to apply for all possible edges
+            var possibleRangeEdges = new List<RangeEdge>();
+            for (var i = 0; i < possibleRangeEdgesValues.Count; i++)
+            {
+                if (seedsToTransform.FirstOrDefault(x => possibleRangeEdgesValues[i] >= x.Min && possibleRangeEdgesValues[i] <= x.Max) is { } nextSeed)
+                {
+                    possibleRangeEdges.Add(new RangeEdge(possibleRangeEdgesValues[i], nextSeed.Difference));
+                }
+                else if(seeds.FirstOrDefault(x => possibleRangeEdgesValues[i] >= x.Min && possibleRangeEdgesValues[i] <= x.Max) is { })
+                {
+                    possibleRangeEdges.Add(new RangeEdge(possibleRangeEdgesValues[i], 0));
+                }
+                else
+                {
+                    possibleRangeEdges.Add(new RangeEdge(possibleRangeEdgesValues[i], null));
+                }
+            }
+
+            // define the new seeds ranges
+            var newSeeds = new List<SeedRange>();
+            long? lastDifference = null;
+            long? lastValue = null;
+            long? begin = null;
+            foreach (var filteredEdge in possibleRangeEdges)
+            {
+                if (lastDifference != filteredEdge.Difference)
+                {
+                    if(begin != null && lastDifference != null)
+                    {
+                        newSeeds.Add(new SeedRange(begin.Value, lastValue!.Value, lastDifference.Value));
+                    }
+                    
+                    begin = filteredEdge.Value;
+                }
+                
+                lastValue = filteredEdge.Value;
+                lastDifference = filteredEdge.Difference;
+            }
+            
+            // 2. Apply the transformation to all seeds
+            newSeeds = newSeeds.Select(x => new SeedRange(x.Min + x.Difference, x.Max + x.Difference, 0)).ToList();
+            
+            seeds = newSeeds;
+            seedsToTransform = new List<SeedRange>();
+        }
+    }
+
+    return seeds.Min(x => x.Min);
+}
 
 IEnumerable<SeedRange> GetSeeds(string line)
 {
