@@ -135,7 +135,7 @@ long Part2()
                 lastDifference = filteredEdge.Difference;
             }
             
-            // 2. Apply the transformation to all seeds
+            // apply the transformations to all seeds
             newSeeds = newSeeds.Select(x => new SeedRange(x.Min + x.Difference, x.Max + x.Difference, 0)).ToList();
             
             seeds = newSeeds;
