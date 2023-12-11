@@ -1,0 +1,1 @@
+﻿var lines = File.ReadAllLines("test.txt");
